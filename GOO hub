@@ -1,0 +1,163 @@
+-- GOO hub - Ultra Dark Neon Theme UI
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local localPlayer = Players.LocalPlayer
+
+-- ลบ UI เก่าถ้ามีอยู่
+if game:GetService("CoreGui"):FindFirstChild("GOOhub_Modern") then
+	game:GetService("CoreGui"):FindFirstChild("GOOhub_Modern"):Destroy()
+end
+
+-- สร้าง ScreenGUI หลัก
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "GOOhub_Modern"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:GetService("CoreGui")
+
+-- Main Frame (หน้าต่างหลัก)
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 360, 0, 480)
+MainFrame.Position = UDim2.new(0.5, -180, 0.5, -240)
+MainFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 24)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+
+local MainCorner = Instance.new("UICorner")
+MainCorner.CornerRadius = UDim.new(0, 12)
+MainCorner.Parent = MainFrame
+
+-- เส้นขอบนีออน (Neon Border Stroke)
+local MainUIStroke = Instance.new("UIStroke")
+MainUIStroke.Color = Color3.fromRGB(0, 200, 255)
+MainUIStroke.Thickness = 1.5
+MainUIStroke.Transparency = 0.3
+MainUIStroke.Parent = MainFrame
+
+-- Top Bar (แถบหัวข้อ)
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 50)
+TopBar.BackgroundColor3 = Color3.fromRGB(24, 24, 32)
+TopBar.BorderSizePixel = 0
+TopBar.Parent = MainFrame
+
+local TopBarCorner = Instance.new("UICorner")
+TopBarCorner.CornerRadius = UDim.new(0, 12)
+TopBarCorner.Parent = TopBar
+
+-- Title Logo & Text
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -60, 1, 0)
+Title.Position = UDim2.new(0, 16, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "<font color='#00E5FF'>GOO</font> HUB"
+Title.RichText = true
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 20
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+-- Subtitle Tag
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(0, 60, 0, 20)
+SubTitle.Position = UDim2.new(1, -70, 0.5, -10)
+SubTitle.BackgroundColor3 = Color3.fromRGB(0, 229, 255)
+SubTitle.BackgroundTransparency = 0.85
+SubTitle.Text = "V2.0 PRO"
+SubTitle.TextColor3 = Color3.fromRGB(0, 229, 255)
+SubTitle.TextSize = 10
+SubTitle.Font = Enum.Font.GothamBold
+SubTitle.Parent = TopBar
+
+local SubCorner = Instance.new("UICorner")
+SubCorner.CornerRadius = UDim.new(0, 6)
+SubCorner.Parent = SubTitle
+
+-- Container พื้นที่ปุ่มฟังก์ชัน
+local Container = Instance.new("ScrollingFrame")
+Container.Size = UDim2.new(1, -24, 1, -66)
+Container.Position = UDim2.new(0, 12, 0, 58)
+Container.BackgroundTransparency = 1
+Container.CanvasSize = UDim2.new(0, 0, 0, 0)
+Container.ScrollBarThickness = 3
+Container.ScrollBarImageColor3 = Color3.fromRGB(0, 229, 255)
+Container.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 8)
+UIListLayout.Parent = Container
+
+UIListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+	Container.CanvasSize = UDim2.new(0, 0, 0, UIListLayout.AbsoluteContentSize.Y + 10)
+end)
+
+-- Variables
+local speedEnabled, jumpEnabled, infiniteJumpEnabled = false, false, false
+local espEnabled, noclipEnabled, flyEnabled = false, false, false
+local walkSpeedValue, jumpPowerValue, flySpeed = 16, 50, 50
+
+-- Helper Function: UI Toggle Generator
+local function CreateToggle(name, callback)
+	local btnFrame = Instance.new("Frame")
+	btnFrame.Size = UDim2.new(1, 0, 0, 44)
+	btnFrame.BackgroundColor3 = Color3.fromRGB(28, 28, 38)
+	btnFrame.Parent = Container
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 8)
+	btnCorner.Parent = btnFrame
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, -60, 1, 0)
+	label.Position = UDim2.new(0, 14, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Text = name
+	label.TextColor3 = Color3.fromRGB(200, 200, 215)
+	label.TextSize = 13
+	label.Font = Enum.Font.GothamMedium
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = btnFrame
+
+	-- Switch Design
+	local switchBg = Instance.new("Frame")
+	switchBg.Size = UDim2.new(0, 40, 0, 20)
+	switchBg.Position = UDim2.new(1, -50, 0.5, -10)
+	switchBg.BackgroundColor3 = Color3.fromRGB(45, 45, 60)
+	switchBg.Parent = btnFrame
+
+	local switchCorner = Instance.new("UICorner")
+	switchCorner.CornerRadius = UDim.new(1, 0)
+	switchCorner.Parent = switchBg
+
+	local switchDot = Instance.new("Frame")
+	switchDot.Size = UDim2.new(0, 14, 0, 14)
+	switchDot.Position = UDim2.new(0, 3, 0.5, -7)
+	switchDot.BackgroundColor3 = Color3.fromRGB(150, 150, 170)
+	switchDot.Parent = switchBg
+
+	local dotCorner = Instance.new("UICorner")
+	dotCorner.CornerRadius = UDim.new(1, 0)
+	dotCorner.Parent = switchDot
+
+	local trigger = Instance.new("TextButton")
+	trigger.Size = UDim2.new(1, 0, 1, 0)
+	trigger.BackgroundTransparency = 1
+	trigger.Text = ""
+	trigger.Parent = btnFrame
+
+	local toggled = false
+	trigger.MouseButton1Click:Connect(function()
+		toggled = not toggled
+		local targetDotPos = toggled and UDim2.new(1, -17, 0.5, -7) or UDim2.new(0, 3, 0.5, -7)
+		local targetBgColor = toggled and Color3.fromRGB(0, 229, 255) or Color3.fromRGB(45, 45, 60)
+		local targetDotColor = toggled and Color3.fromRGB(15, 15, 20) or Color3.fromRGB(150, 150, 170)
+		local targetTextColor = toggled and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(200, 200, 215)
+
+		TweenService:Create(switchDot, TweenInfo.new(0.25, Enum.EasingStyle.Quart), {Position = targetDotPos, BackgroundColor3 = targetDotColor}):Play()
+
